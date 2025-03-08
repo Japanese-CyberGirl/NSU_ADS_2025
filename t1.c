@@ -1,60 +1,119 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
-typedef struct node {
+bool containsCharacter(const char *str, char ch) {
+    return strchr(str, ch) != NULL;
+}
+
+struct list {
+    char data;
     int value;
-    struct node *left;
-    struct node *right;
-} tree;
+    struct list *next;
+};
 
-tree *add(tree *t , int x) {
-    if (t == NULL) {
-        t = (tree*)calloc(1, sizeof(tree));
-        t->value = x;
-        t->left = NULL;
-        t->right = NULL;
-        return t;
-    }
-    if (t->value > x) {
-        t->left = add(t->left, x);
-    }
-    else {
-        if (t->value < x) {
-            t->right = add(t->right, x);
-        }
-    }
-    return t;
+typedef struct Stack {
+    struct list *top;
+} Stack;
+
+int empty(Stack *S) {
+    return (S->top == NULL);
 }
 
-
-void pref(tree *t) {
-    if (!t) return;
-    printf("%d ", t->value);
-    pref(t->left);
-    pref(t->right);
+int top_value(Stack *S) {
+    return(S->top->value);
 }
 
-void postf(tree *t) {
-    if (!t) return;
-    postf(t->left);
-    postf(t->right);
-    printf("%d ", t->value);
+char top_char(Stack *S) {
+    return(S->top->data);
+}
+
+void create_stack(Stack **S) {
+    *S = (Stack *)calloc(1, sizeof(Stack));
+    (*S)->top = NULL;
+}
+
+char pop(Stack *S) {
+    char a; 
+    struct list *p;
+    p = S->top;
+    a = p->data;
+    S->top = p->next;
+    free(p);
+    return a;
+}
+
+void push(Stack *S, char a) {
+    struct list *p;
+    p = (struct list*)calloc(1, sizeof(struct list));
+    p->data = a;
+    if (containsCharacter("*/", a)) {
+        p->value = 2;
+    } else if (containsCharacter("+-", a)) {
+        p->value = 1;
+    } else {
+        p->value = 0;
+    }
+    p->next = S->top;
+    S->top = p;
 }
 
 int main()
 {
-    tree *root = NULL;
+    FILE* input = fopen("input.txt", "r");
 
-    FILE *input = fopen("input.txt", "r");
-    int token;
+    char *string = (char*)calloc(1000, sizeof(char)); 
+    fscanf(input, "%s", string);
 
-    while(fscanf(input, "%d", &token) == 1) {
-        root = add(root, token);
+    Stack *stack;
+    create_stack(&stack);
+    
+    int len = strlen(string);
+    char token;
+
+    for (int i = 0 ; i < len ; i ++ ) {
+
+        token = string[i];
+
+        if (!containsCharacter("()*/+-", token)) {
+            printf("%c", token);
+        }
+
+        if (token == '(') {
+            push(stack, token);
+        }
+
+        if (token == ')') {
+            while (!empty(stack) && top_char(stack) != '(') {
+                printf("%c", pop(stack));
+            }
+            if (!empty(stack) && top_char(stack) == '(') {
+                pop(stack);
+            }
+        }
+
+        if (containsCharacter("*/", token)) {
+            while (!empty(stack) && top_value(stack) >= 2) {
+                printf("%c", pop(stack));
+            }
+            push(stack, token);
+        }
+
+        if (containsCharacter("+-", token)) {
+            while (!empty(stack) && top_value(stack) >= 1) {
+                printf("%c", pop(stack));
+            }
+            push(stack, token);
+         }
+
     }
 
-    pref(root);
-    printf("\n");
-    postf(root);
+    while (!empty(stack)) {
+        printf("%c", pop(stack));
+    }
+
     fclose(input);
+    free(string);
     return 0;
 }

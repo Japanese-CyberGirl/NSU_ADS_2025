@@ -1,58 +1,100 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
 
-typedef struct node {
-    int value;
-    struct node *left;
-    struct node *right;
-} tree;
-
-tree *add(tree *t , int x) {
-    if (t == NULL) {
-        t = (tree*)calloc(1, sizeof(tree));
-        t->value = x;
-        t->left = NULL;
-        t->right = NULL;
-        return t;
-    }
-    if (t->value > x) {
-        t->left = add(t->left, x);
-    }
-    else {
-        if (t->value < x) {
-            t->right = add(t->right, x);
-        }
-    }
-    return t;
+bool containsCharacter(const char *str, char ch) {
+    return strchr(str, ch) != NULL;
 }
 
-int height(tree *t) {
-    if (t == NULL) {
-        return 0;
-    }
+struct list {
+    int digit;
+    struct list *next;
+};
 
-    int left_height = height(t->left);
-    int right_height = height(t->right);
+typedef struct Stack {
+    struct list *top;
+} Stack;
 
-    return 1 + (left_height > right_height ? left_height : right_height);
+int empty(Stack *S) {
+    return (S->top == NULL);
 }
 
 
+void create_stack(Stack **S) {
+    *S = (Stack *)calloc(1, sizeof(Stack));
+    (*S)->top = NULL;
+}
+
+int pop(Stack *S) {
+    int a; 
+    struct list *p;
+    p = S->top;
+    a = p->digit;
+    S->top = p->next;
+    free(p);
+    return a;
+}
+
+void push(Stack *S, int a) {
+    struct list *p;
+    p = (struct list*)calloc(1, sizeof(struct list));
+    p->digit = a;
+    p->next = S->top;
+    S->top = p;
+}
 
 int main()
 {
-    tree *root = NULL;
+    FILE *input = fopen("input.txt", "r");  
 
-    FILE *input = fopen("input.txt", "r");
-    int token;
+    char *string = (char*)calloc(2000, sizeof(char));
+    fgets(string, 2000, input);
 
-    while(fscanf(input, "%d", &token) == 1) {
-        root = add(root, token);
+    Stack *stack;
+    create_stack(&stack);
+
+    int len = strlen(string);
+    char token;
+    int a = 0;
+    int b = 0;
+    int c = 0;
+
+    for (int i = 0 ; i < len ; i ++ ) {
+        token = string[i];
+
+        if (isspace(token)) {
+            continue;
+        }
+
+        if (isdigit(token)) {
+            int degree = 0;
+            while (i < len && isdigit(string[i  ])) {
+                degree = degree * 10 + (string[i] - '0');
+                i += 1;
+                token = string[i];
+            }
+            i -= 1;
+            push(stack, degree);
+        }
+
+        if (containsCharacter("*/+-", token)) {
+            a = pop(stack);
+            b = pop(stack);
+            c = ('*' == token) ? b * a : c;
+            c = ('/' == token) ? b / a : c;
+            c = ('+' == token) ? b + a : c;
+            c = ('-' == token) ? b - a : c;
+
+            push(stack, c);
+        }
     }
 
-    printf("%d\n", height(root) - 1);
+    while(!empty(stack)) {
+        printf("%d", pop(stack));
+    }
 
     fclose(input);
-
     return 0;
 }
