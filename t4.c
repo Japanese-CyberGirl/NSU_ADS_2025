@@ -6,7 +6,7 @@ typedef struct node {
     struct node *left;
     struct node *right;
 } tree;
-
+//слава шарит за матан
 tree *add(tree *t , int x) {
     if (t == NULL) {
         t = (tree*)calloc(1, sizeof(tree));
