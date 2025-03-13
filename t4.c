@@ -11,6 +11,8 @@
 
     } Deque;
 
+//
+
     Deque *create(int capacity) {
         Deque *d = (Deque*)calloc(1, sizeof(Deque));
         d->front = 0;
