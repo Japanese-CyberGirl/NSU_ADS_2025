@@ -20,7 +20,7 @@ Node *creation(int key) {
     return new;
 }
 
-void left_rotation(Node *root, Node *x) {
+void left_rotation(Node **root, Node *x) {
     Node *y = x->right; // y - правый потомок х
     x->right = y->left; // левый потомок превращается в правого потомка x
     if (y->left != NULL) {
@@ -30,7 +30,7 @@ void left_rotation(Node *root, Node *x) {
     y->parent = x->parent;
     if (x->parent == NULL) {
         *root = y;
-    }
+        
     else if(x == x->parent->left) x->parent->left = y;
     else x->parent->right = y;
 
