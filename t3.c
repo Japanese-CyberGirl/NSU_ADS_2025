@@ -4,20 +4,22 @@
 
 typedef struct Node {
     int key; 
-    char color;
+    char color; 
     struct Node *left;
     struct Node *right;
     struct Node *parent;
     int counter; 
 } Node;
 
+Node *nil; 
+
 Node *creation(int key) { 
     Node *new = (Node*)calloc(1, sizeof(Node));
     new->key = key;
     new->color = 'R';
-    new->left = NULL;
-    new->right = NULL;
-    new->parent = NULL;
+    new->left = nil;
+    new->right = nil;
+    new->parent = nil;
     new->counter = 1; 
     return new;
 }
@@ -25,12 +27,12 @@ Node *creation(int key) {
 void left_rotation(Node **root, Node *x) {
     Node *y = x->right;
     x->right = y->left;
-    if (y->left != NULL) {
+    if (y->left != nil) {
         y->left->parent = x;
     }
 
     y->parent = x->parent;
-    if (x->parent == NULL) {
+    if (x->parent == nil) {
         *root = y;
     }
     else if (x == x->parent->left) {
@@ -46,12 +48,12 @@ void left_rotation(Node **root, Node *x) {
 void right_rotation(Node **root, Node *x) {
     Node *y = x->left;
     x->left = y->right;
-    if (y->right != NULL) {
+    if (y->right != nil) {
         y->right->parent = x;
     }
 
     y->parent = x->parent;
-    if (x->parent == NULL) {
+    if (x->parent == nil) {
         *root = y;
     }
     else if(x == x->parent->right) {
@@ -68,7 +70,7 @@ void insertFixup(Node **root, Node *node) {
     while (node != *root && node->parent->color == 'R') {
         if (node->parent == node->parent->parent->left) {
             Node *uncle = node->parent->parent->right;
-            if (uncle != NULL && uncle->color == 'R') {
+            if (uncle != nil && uncle->color == 'R') {
                 node->parent->color = 'B';
                 uncle->color = 'B';
                 node->parent->parent->color = 'R';
@@ -86,7 +88,7 @@ void insertFixup(Node **root, Node *node) {
         }
         else {
             Node *uncle = node->parent->parent->left;
-            if (uncle != NULL && uncle->color == 'R') {
+            if (uncle != nil && uncle->color == 'R') {
                 node->parent->color = 'B';
                 uncle->color = 'B';
                 node->parent->parent->color = 'R';
@@ -109,9 +111,9 @@ void insertFixup(Node **root, Node *node) {
 void insert(Node **root, int key, FILE *output) { 
     Node *node = creation(key);
     Node *current = *root;
-    Node *parent = NULL;
+    Node *parent = nil;
     
-    while (current != NULL) {
+    while (current != nil) {
         parent = current;
         if (key < current->key) {
             current = current->left;
@@ -128,7 +130,7 @@ void insert(Node **root, int key, FILE *output) {
     }
 
     node->parent = parent;
-    if (parent == NULL) {
+    if (parent == nil) {
         *root = node;
     }
     else if (key < parent->key) {
@@ -142,14 +144,14 @@ void insert(Node **root, int key, FILE *output) {
 }
 
 Node *treeMinimum(Node *node) {
-    while (node->left != NULL) {
+    while (node->left != nil) {
         node = node->left;
     }
     return node;
 }
 
 void transplant(Node **root, Node *u, Node *v) {
-    if (u->parent == NULL) {
+    if (u->parent == nil) {
         *root = v;
     }
     else if (u == u->parent->left) {
@@ -158,9 +160,7 @@ void transplant(Node **root, Node *u, Node *v) {
     else {
         u->parent->right = v;
     }
-    if (v != NULL) {
-        v->parent = u->parent;
-    }
+    v->parent = u->parent;
 }
 
 void deleteFixup(Node **root, Node *x) {
@@ -173,12 +173,12 @@ void deleteFixup(Node **root, Node *x) {
                 left_rotation(root, x->parent);
                 w = x->parent->right;
             }
-            if ((w->left == NULL || w->left->color == 'B') && (w->right == NULL || w->right->color == 'B')) {
+            if (w->left->color == 'B' && w->right->color == 'B') {
                 w->color = 'R';
                 x = x->parent;
             }
             else {
-                if (w->right == NULL || w->right->color == 'B') {
+                if (w->right->color == 'B') {
                     w->left->color = 'B';
                     w->color = 'R';
                     right_rotation(root, w);
@@ -186,9 +186,7 @@ void deleteFixup(Node **root, Node *x) {
                 }
                 w->color = x->parent->color;
                 x->parent->color = 'B';
-                if (w->right != NULL) {
-                    w->right->color = 'B';
-                }
+                w->right->color = 'B';
                 left_rotation(root, x->parent);
                 x = *root;
             }
@@ -201,12 +199,12 @@ void deleteFixup(Node **root, Node *x) {
                 right_rotation(root, x->parent);
                 w = x->parent->left;
             }
-            if ((w->right == NULL || w->right->color == 'B') && (w->left == NULL || w->left->color == 'B')) {
+            if (w->right->color == 'B' && w->left->color == 'B') {
                 w->color = 'R';
                 x = x->parent;
             }
             else {
-                if (w->left == NULL || w->left->color == 'B') {
+                if (w->left->color == 'B') {
                     w->right->color = 'B';
                     w->color = 'R';
                     left_rotation(root, w);
@@ -214,9 +212,7 @@ void deleteFixup(Node **root, Node *x) {
                 }
                 w->color = x->parent->color;
                 x->parent->color = 'B';
-                if (w->left != NULL) {
-                    w->left->color = 'B';
-                }
+                w->left->color = 'B';
                 right_rotation(root, x->parent);
                 x = *root;
             }
@@ -226,29 +222,27 @@ void deleteFixup(Node **root, Node *x) {
 }
 
 void removeNode(Node **root, int key, FILE *output) {
-    Node *z = NULL;
-    Node *current = *root;
-    while(current != NULL && current->key != key) {
-        if (key < current->key) {
-            current = current->left;
+    Node *z = *root;
+    while(z != nil && z->key != key) {
+        if (key < z->key) {
+            z = z->left;
         }
         else {
-            current = current->right;
+            z = z->right;
         }
     }
-    if (current == NULL) {
+    if (z == nil) {
         fprintf(output, "miss\n");
         return;
     }
-    z = current;
     fprintf(output, "removed\n");
     char y_original_color = z->color;
     Node *x;
-    if (z->left == NULL) {
+    if (z->left == nil) {
         x = z->right;
         transplant(root, z, z->right);
     }
-    else if (z->right == NULL) {
+    else if (z->right == nil) {
         x = z->left;
         transplant(root, z, z->left);
     }
@@ -277,8 +271,8 @@ void removeNode(Node **root, int key, FILE *output) {
 
 Node *lowerBound(Node *root, int key) {
     Node *current = root;
-    Node *result = NULL;
-    while (current != NULL) {
+    Node *result = nil;
+    while (current != nil) {
         if (current->key >= key) {
             result = current;
             current = current->left;   
@@ -294,9 +288,11 @@ int main() {
     FILE *input = fopen("input.txt", "r");
     FILE *output = fopen("output.txt", "w");
 
+    nil = (Node*)calloc(1, sizeof(Node));
+    nil->color = 'B';
+    nil->left = nil->right = nil->parent = nil;
 
-
-    Node *root = NULL;
+    Node *root = nil;
 
     char string[52];
     char command[10];
@@ -307,12 +303,10 @@ int main() {
     fgetc(input); 
 
     for (int i = 0; i < M; i++) {
-        if (fgets(string, sizeof(string), input) == NULL) {
-            break;
-        }
-        if (sscanf(string, "%s %d", command, &value) < 1) {
-            continue; 
-        }
+        fgets(string, sizeof(string), input);
+
+        sscanf(string, "%s %d", command, &value);
+
         if (strcmp(command, "add") == 0) {
             insert(&root, value, output);
         }
@@ -321,7 +315,7 @@ int main() {
         }
         else if (strcmp(command, "lower") == 0) {
             Node *result = lowerBound(root, value);
-            if (result != NULL) {
+            if (result != nil) {
                 fprintf(output, "%d\n", result->key);
             }
             else {
@@ -333,5 +327,6 @@ int main() {
     fclose(input);
     fclose(output);
 
+    free(nil); 
     return 0;
 }
