@@ -11,7 +11,7 @@ typedef struct Heap {
 
 Heap *create(int capacity) {
     Heap *h = (Heap*)calloc(1, sizeof(Heap));
-    h->heap = (int*)calloc(capacity, sizeof(int));
+    h->heap = (int*)calloc(capacity, sizeof(int)); ///эта типа массив крч
     h->value = 0;  
     h->capacity = capacity;
     return h;
@@ -89,24 +89,34 @@ void printHeap(Heap *h) {
 
 }
 
+void heapsort(int *arr, int n) {
+
+    Heap *h = create(n);
+
+    for (int i = 0 ; i < n ; i ++ ) {
+        push(h, arr[i]);
+    }
+
+    for (int i = 0 ; i < n ; i ++ ) {
+        arr[i] = pop(h);
+    }
+
+}
+
 int main() {
     FILE *input = fopen("input.txt", "r");
     int Q = 0;
     fscanf(input, "%d", &Q);
-    Heap *heap = create(Q);
+    int *array = (int*)calloc(Q, sizeof(int));
 
-    for (int i = 0; i < Q; i++) {
-        char operation[10];
-        fscanf(input, "%s", operation);
-        if (strcmp(operation, "push") == 0) {
-            int value;
-            fscanf(input, "%d", &value);
-            push(heap, value);
-        }
-        if (strcmp(operation, "pop") == 0) {
-            int value = pop(heap);
-            (value == 1000000) ? printf("Heap is empty\n") : printf("%d\n", value);
-        }
+    for (int i = 0 ; i < Q ; i ++ ) {
+        fscanf(input, "%d", &array[i]);
+    }
+
+    heapsort(array, Q);
+
+    for (int i = 0 ; i < Q ; i ++ ) {
+        printf("%d ", array[i]);
     }
 
     fclose(input);
