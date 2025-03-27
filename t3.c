@@ -1,38 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct Heap {
-    int *heap;
-    int value;  
-    int capacity;
+    int32_t *heap;
+    int32_t value;  
+    int32_t capacity;
 } Heap;
 
-Heap *create(int capacity) {
+Heap *create(int32_t capacity) {
     Heap *h = (Heap*)calloc(1, sizeof(Heap));
-    h->heap = (int*)calloc(capacity, sizeof(int)); ///эта типа массив крч
+    h->heap = (int32_t*)calloc(capacity, sizeof(int32_t));
     h->value = 0;  
     h->capacity = capacity;
     return h;
 }
 
-int Parent(int i) {
+int32_t Parent(int32_t i) {
     return (i-1)/2;
 }
 
-int Left(int i) {
+int32_t Left(int32_t i) {
     return (2 * i + 1);
 }
 
-int Right(int i) {
+int32_t Right(int32_t i) {
     return (2 * i + 2);
 }
 
-void heapifyDown(Heap *h, int i) {
-    int smallest = i;
-    int l = Left(i);
-    int r = Right(i);
+void heapifyDown(Heap *h, int32_t i) {
+    int32_t smallest = i;
+    int32_t l = Left(i);
+    int32_t r = Right(i);
 
     if (l < h->value && h->heap[l] < h->heap[smallest]) {  
         smallest = l;
@@ -43,7 +43,7 @@ void heapifyDown(Heap *h, int i) {
     }
 
     if (smallest != i) {
-        int temp = h->heap[i];
+        int32_t temp = h->heap[i];
         h->heap[i] = h->heap[smallest];
         h->heap[smallest] = temp;
 
@@ -51,74 +51,64 @@ void heapifyDown(Heap *h, int i) {
     }
 }
 
-void heapifyUp(Heap *h, int i) {
+void heapifyUp(Heap *h, int32_t i) {
     while (i != 0 && h->heap[Parent(i)] > h->heap[i]) {
-        int temp = h->heap[i];
+        int32_t temp = h->heap[i];
         h->heap[i] = h->heap[Parent(i)];
         h->heap[Parent(i)] = temp;
         i = Parent(i);
     }
 }
 
-void push(Heap *h, int key) {
+void push(Heap *h, int32_t key) {
     h->heap[h->value] = key;  
     h->value++;               
     heapifyUp(h, h->value - 1);  
 }
 
-int pop(Heap *h) {
-    
-    if (h->value == 0) {
-        return 1000000;
-    }
+int32_t pop(Heap *h) {
 
-    int root = h->heap[0];
+    int32_t root = h->heap[0];
     h->heap[0] = h->heap[h->value - 1];  
     h->value--;                          
     heapifyDown(h, 0);
     return root;
 }
 
-void printHeap(Heap *h) {
-    if (h->value == 0) {
-        printf("Heap is empty\n");
-    }
-    for (int i = 0 ; i < h->value ; i ++ ) {
-        printf("%d ", h->heap[i]);
-    }
 
-}
-
-void heapsort(int *arr, int n) {
-
+void heapsort(int32_t *arr, int32_t n) {
     Heap *h = create(n);
 
-    for (int i = 0 ; i < n ; i ++ ) {
+    for (int32_t i = 0; i < n; i++) {
         push(h, arr[i]);
     }
 
-    for (int i = 0 ; i < n ; i ++ ) {
+    for (int32_t i = 0; i < n; i++) {
         arr[i] = pop(h);
     }
 
+    free(h->heap);
+    free(h);
 }
 
 int main() {
-    FILE *input = fopen("input.txt", "r");
-    int Q = 0;
-    fscanf(input, "%d", &Q);
-    int *array = (int*)calloc(Q, sizeof(int));
+    FILE *input = fopen("input.bin", "rb");
 
-    for (int i = 0 ; i < Q ; i ++ ) {
-        fscanf(input, "%d", &array[i]);
-    }
+    FILE *output = fopen("output.bin", "wb");
+
+    int32_t Q;
+    fread(&Q, sizeof(int32_t), 1, input);
+
+    int32_t *array = (int32_t*)calloc(Q, sizeof(int32_t));
+
+    fread(array, sizeof(int32_t), Q, input);
+
 
     heapsort(array, Q);
 
-    for (int i = 0 ; i < Q ; i ++ ) {
-        printf("%d ", array[i]);
-    }
+    fwrite(array, sizeof(int32_t), Q, output);
 
     fclose(input);
+    fclose(output);
     return 0;
 }
