@@ -119,6 +119,39 @@ void create_box(box *box, int capacity) {
     box->size = 0;
 }
 
+void mark_box(box *box, int key) {
+    for (int i = 0 ; i < box->size ; i ++ ) {
+        if (box->keys[i] == key) {
+            box->counts[i] ++ ;
+            return ;
+        }
+    }
+    box->keys[box->size] = key;
+    box->counts[box->size] = 1;
+    box->size ++ ;
+}
+
+int isremoved(box *box, int key) {
+    for (int i = 0 ; i < box->size ; i ++ ) {
+        if (box->keys[i] == key && box->counts[i] > 0 ) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void cleanheap(Heap *h, box *box) {
+    while (h->value > 0 && isremoved(box, peek(h))) {
+        int key = pop(h);
+        for (int i = 0 ; i < box->size ; i ++ ) {
+            if (box->keys[i] == key) {
+                box->counts[i] -- ;
+                break;
+            }
+        }
+    }
+}
+
 
 int main()
 {
@@ -127,13 +160,34 @@ int main()
     int N = 0;
     fscanf(input, "%d", &N);
 
-    Heap *heap = create(N);
+    int *array = (int*)calloc(N, sizeof(int));
     for (int i = 0 ; i < N ; i ++ ) {
-        int value = 0;
-        fscanf(input, "%d", &value);
-        push(heap, value);
+        fscanf(input, "%d", &array[i]);
     }
 
+    char commands[400001];
+    fscanf(input, "%s", commands);
+
+    Heap *heap = create(N);
+    box box;
+    create_box(&box, N);
+
+    int L = 0 ;
+    int R = 0 ;
+
+    int i = 0;
+    while(commands[i] != '\0') {
+        if (commands[i] == 'R') {
+            push(heap, array[R]);
+            R ++ ;
+        } 
+        else if (commands[i] == 'L') {
+            mark_box(&box, array[L]) ;
+                L ++ ;
+        }
+        cleanheap(heap, &box);
+        printf("%d\n", peek(heap));
+    }
 
 
     fclose(input);
