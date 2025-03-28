@@ -30,29 +30,29 @@ int Right(int i) {
 }
 
 void heapifyDown(Heap *h, int i) {
-    int smallest = i;
+    int largest = i;  
     int l = Left(i);
     int r = Right(i);
 
-    if (l < h->value && h->heap[l] < h->heap[smallest]) {  
-        smallest = l;
+    if (l < h->value && h->heap[l] > h->heap[largest]) {  
+        largest = l;
     }
 
-    if (r < h->value && h->heap[r] < h->heap[smallest]) { 
-        smallest = r;
+    if (r < h->value && h->heap[r] > h->heap[largest]) {  
+        largest = r;
     }
 
-    if (smallest != i) {
+    if (largest != i) {
         int temp = h->heap[i];
-        h->heap[i] = h->heap[smallest];
-        h->heap[smallest] = temp;
+        h->heap[i] = h->heap[largest];
+        h->heap[largest] = temp;
 
-        heapifyDown(h, smallest);
+        heapifyDown(h, largest);
     }
 }
 
 void heapifyUp(Heap *h, int i) {
-    while (i != 0 && h->heap[Parent(i)] > h->heap[i]) {
+    while (i != 0 && h->heap[Parent(i)] < h->heap[i]) { 
         int temp = h->heap[i];
         h->heap[i] = h->heap[Parent(i)];
         h->heap[Parent(i)] = temp;
@@ -103,6 +103,23 @@ void heapsort(int *arr, int n) {
 
 }
 
+int peek(Heap *h) {
+    return h->heap[0];
+}
+
+typedef struct box {
+    int *keys;
+    int *counts;
+    int size;
+} box;
+
+void create_box(box *box, int capacity) {
+    box->keys = (int*)calloc(capacity, sizeof(int));
+    box->counts = (int*)calloc(capacity, sizeof(int));
+    box->size = 0;
+}
+
+
 int main()
 {
     FILE *input = fopen("input.txt", "r");
@@ -117,7 +134,7 @@ int main()
         push(heap, value);
     }
 
-    printHeap(heap);
+
 
     fclose(input);
     return 0;
