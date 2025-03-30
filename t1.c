@@ -47,8 +47,8 @@ int add(struct Hashtable *ht, int key, int *result, int *size) {
 
 int main()
 {
-    FILE *input = fopen("1.in", "rb");
-    //FILE *input = fopen("input.bin", "rb");
+    //FILE *input = fopen("1.in", "rb");
+    FILE *input = fopen("input.bin", "rb");
     int n = 0;
     fread(&n, sizeof(int), 1, input);
 
