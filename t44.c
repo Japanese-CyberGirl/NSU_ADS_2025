@@ -221,62 +221,59 @@ void deleteFixup(Node **root, Node *x) {
 
 void removeNode(Node **root, int key) {
     Node *z = *root;
-    while(z != nil && z->key != key) {
-        if (key < z->key) {
-            z = z->left;
-        }
-        else {
-            z = z->right;
-        }
+    while (z != nil && z->key != key) {
+        if (key < z->key) z = z->left;
+        else z = z->right;
     }
     
-    if (z == nil) {
-        return;  
-    }
+    if (z == nil) return;
 
-    if (z->counter > 1) {
+    if (z->counter > 0) {
         z->counter--;
-        return;
     }
+    
+    if (z->counter == 0) {
+        Node *y = z;
+        char y_original_color = y->color;
+        Node *x;
 
-    char y_original_color = z->color;
-    Node *x;
-    if (z->left == nil) {
-        x = z->right;
-        transplant(root, z, z->right);
-    }
-    else if (z->right == nil) {
-        x = z->left;
-        transplant(root, z, z->left);
-    }
-    else {
-        Node *y = treeMinimum(z->right);
-        y_original_color = y->color;
-        x = y->right;
-        if (y->parent == z) {
-            x->parent = y;
+        if (z->left == nil) {
+            x = z->right;
+            transplant(root, z, z->right);
+        } else if (z->right == nil) {
+            x = z->left;
+            transplant(root, z, z->left);
+        } else {
+            y = treeMinimum(z->right);
+            y_original_color = y->color;
+            x = y->right;
+            
+            if (y->parent == z) {
+                x->parent = y;
+            } else {
+                transplant(root, y, y->right);
+                y->right = z->right;
+                y->right->parent = y;
+            }
+            
+            transplant(root, z, y);
+            y->left = z->left;
+            y->left->parent = y;
+            y->color = z->color;
+            y->counter = z->counter;
         }
-        else {
-            transplant(root, y , y->right);
-            y->right = z->right;
-            y->right->parent = y;
+        
+        free(z);
+        
+        if (y_original_color == 'B') {
+            deleteFixup(root, x);
         }
-        transplant(root, z, y);
-        y->left = z->left;
-        y->left->parent = y;
-        y->color = z->color;
-        y->counter = z->counter;
-    }
-    free(z);
-    if (y_original_color == 'B') {
-        deleteFixup(root, x);
     }
 }
 
 Node *treeMaximum(Node *node) {
-    static Node empty_node = {.key = -1}; 
-    
     if (node == nil) {
+        static Node empty_node = {.key = -1};
         return &empty_node;
     }
     
@@ -336,7 +333,11 @@ int main() {
         }
 
         Node *maximum = treeMaximum(root);
-        printf("%d\n", maximum->key);
+        if (maximum->key == -1) {
+            printf("EMPTY\n");
+        } else {
+            printf("%d\n", maximum->key);
+        }
     }
 
     free(array);
