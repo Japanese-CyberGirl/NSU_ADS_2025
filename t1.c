@@ -1,127 +1,87 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 typedef struct Node {
-    int key;          
-    int priority;     
+    int key;
+    int priority;
     struct Node* left;
     struct Node* right;
-    struct Node* parent;
 } Node;
 
-
-Node* createNode(int key, int priority) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    newNode->key = key;
-    newNode->priority = priority;
-    newNode->left = NULL;
-    newNode->right = NULL;
-    newNode->parent = NULL;
-    return newNode;
-}
-
-void split(Node* root, int key, Node** left, Node** right) {
-    if (root == NULL) {
-        *left = NULL;
-        *right = NULL;
-    } else if (root->key <= key) {
-        split(root->right, key, &(root->right), right);
-        *left = root;
-        if (root->right != NULL) {
-            root->right->parent = root;
-        }
-    } else {
-        split(root->left, key, left, &(root->left));
-        *right = root;
-        if (root->left != NULL) {
-            root->left->parent = root;
-        }
-    }
+Node* create_node(int key, int priority) {
+    Node* node = malloc(sizeof(Node));
+    node->key = key;
+    node->priority = priority;
+    node->left = node->right = NULL;
+    return node;
 }
 
 Node* merge(Node* left, Node* right) {
-    if (left == NULL) return right;
-    if (right == NULL) return left;
-
-    if (left->priority > right->priority) {
+    if (!left) return right;
+    if (!right) return left;
+    
+    if (left->priority < right->priority) {
         left->right = merge(left->right, right);
-        left->right->parent = left;
         return left;
     } else {
         right->left = merge(left, right->left);
-        right->left->parent = right;
         return right;
     }
 }
 
+void split(Node* root, int key, Node** left, Node** right) {
+    if (!root) {
+        *left = *right = NULL;
+        return;
+    }
+    
+    if (root->key < key) {
+        split(root->right, key, &root->right, right);
+        *left = root;
+    } else {
+        split(root->left, key, left, &root->left);
+        *right = root;
+    }
+}
+
 Node* insert(Node* root, int key, int priority) {
-    Node* newNode = createNode(key, priority);
-    Node* left = NULL;
-    Node* right = NULL;
+    Node* new_node = create_node(key, priority);
+    Node *left, *right;
     split(root, key, &left, &right);
-    return merge(merge(left, newNode), right);
+    return merge(merge(left, new_node), right);
 }
 
-Node* removeNode(Node* root, int key) {
-    if (root == NULL) return NULL;
-
-    if (root->key == key) {
-        Node* temp = merge(root->left, root->right);
-        free(root);
-        return temp;
-    }
-
-    if (key < root->key) {
-        root->left = removeNode(root->left, key);
-        if (root->left != NULL) {
-            root->left->parent = root;
-        }
-    } else {
-        root->right = removeNode(root->right, key);
-        if (root->right != NULL) {
-            root->right->parent = root;
-        }
-    }
-    return root;
+void print_parents(Node* node, int parent, int* output) {
+    if (!node) return;
+    
+    output[node->key] = parent;
+    print_parents(node->left, node->key, output);
+    print_parents(node->right, -node->key, output);
 }
-
-Node* find(Node* root, int key) {
-    if (root == NULL || root->key == key) {
-        return root;
-    }
-    if (key < root->key) {
-        return find(root->left, key);
-    } else {
-        return find(root->right, key);
-    }
-}
-
 
 int main() {
+    FILE* fin = fopen("input.txt", "r");
+    FILE* fout = fopen("output.txt", "w");
+    
+    int N;
+    fscanf(fin, "%d", &N);
+    
     Node* root = NULL;
-
-    // Пример использования
-    root = insert(root, 5, 10);
-    root = insert(root, 3, 5);
-    root = insert(root, 7, 15);
-    root = insert(root, 2, 3);
-    root = insert(root, 4, 7);
-
-    printf("Inorder traversal after insertion:\n");
-    inorderTraversal(root);
-
-    root = removeNode(root, 3);
-    printf("\nInorder traversal after removing key 3:\n");
-    inorderTraversal(root);
-
-    Node* found = find(root, 7);
-    if (found != NULL) {
-        printf("\nFound node with key 7, priority: %d\n", found->priority);
-    } else {
-        printf("\nNode with key 7 not found\n");
+    for (int i = 0; i < N; i++) {
+        int key, priority;
+        fscanf(fin, "%d %d", &key, &priority);
+        root = insert(root, key, priority);
     }
-
-    freeTree(root);
+    
+    int* output = calloc(N + 1, sizeof(int));
+    print_parents(root, 0, output);
+    
+    for (int i = 1; i <= N; i++) {
+        fprintf(fout, i > 1 ? " %d" : "%d", output[i]);
+    }
+    
+    free(output);
+    fclose(fin);
+    fclose(fout);
     return 0;
 }
