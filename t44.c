@@ -108,7 +108,7 @@ void insertFixup(Node **root, Node *node) {
     (*root)->color = 'B';
 }
 
-void insert(Node **root, int key, FILE *output) { 
+void insert(Node **root, int key) { 
     Node *node = creation(key);
     Node *current = *root;
     Node *parent = nil;
@@ -219,7 +219,7 @@ void deleteFixup(Node **root, Node *x) {
     x->color = 'B'; 
 }
 
-void removeNode(Node **root, int key, FILE *output) {
+void removeNode(Node **root, int key) {
     Node *z = *root;
     while(z != nil && z->key != key) {
         if (key < z->key) {
@@ -229,10 +229,16 @@ void removeNode(Node **root, int key, FILE *output) {
             z = z->right;
         }
     }
+    
     if (z == nil) {
+        return;  
+    }
 
+    if (z->counter > 1) {
+        z->counter--;
         return;
     }
+
     char y_original_color = z->color;
     Node *x;
     if (z->left == nil) {
@@ -259,6 +265,7 @@ void removeNode(Node **root, int key, FILE *output) {
         y->left = z->left;
         y->left->parent = y;
         y->color = z->color;
+        y->counter = z->counter;
     }
     free(z);
     if (y_original_color == 'B') {
@@ -266,68 +273,74 @@ void removeNode(Node **root, int key, FILE *output) {
     }
 }
 
-Node *lowerBound(Node *root, int key) {
-    Node *current = root;
-    Node *result = nil;
-    while (current != nil) {
-        if (current->key >= key) {
-            result = current;
-            current = current->left;   
-        }
-        else {
-            current = current->right;
-        }
-    }
-    return result;
-}
-
 Node *treeMaximum(Node *node) {
+    static Node empty_node = {.key = -1}; 
+    
+    if (node == nil) {
+        return &empty_node;
+    }
+    
     while (node->right != nil) {
         node = node->right;
     }
     return node;
 }
 
+void printTree(Node *node, int level) {
+    if (node == nil) return;
+    printTree(node->right, level + 1);
+    for (int i = 0; i < level; i++) printf("    ");
+    printf("%d(%c)[%d]\n", node->key, node->color, node->counter);
+    printTree(node->left, level + 1);
+}
 
+void freeTree(Node *root) {
+    if (root == nil) return;
+    freeTree(root->left);
+    freeTree(root->right);
+    free(root);
+}
 
 int main() {
     nil = (Node*)calloc(1, sizeof(Node));
     nil->color = 'B';
-    nil->left = nil->right = nil->parent = nil;
+    nil->left = nil;
+    nil->right = nil;
+    nil->parent = nil;
+    Node *root = nil;
 
     FILE *input = fopen("input.txt", "r");
-    int N;
+    int N = 0;
     fscanf(input, "%d", &N);
-
-    int *A = (int*)malloc(N * sizeof(int));
+    int *array = (int*)malloc(N * sizeof(int));
     for (int i = 0; i < N; i++) {
-        fscanf(input, "%d", &A[i]);
+        fscanf(input, "%d", &array[i]);
     }
 
     char commands[400001];
     fscanf(input, "%s", commands);
+    fclose(input);
 
-    Node *root = nil;
     int L = 0;
     int R = 0;
-
-    for (int i = 0; commands[i] != '\0'; i++) {
+    int leng = strlen(commands);
+    
+    for (int i = 0; i < leng; i++) {
         if (commands[i] == 'R') {
-            insert(&root, A[R], stdout);
+            insert(&root, array[R]);
             R++;
-        } else if (commands[i] == 'L') {
-            removeNode(&root, A[L], stdout); 
+        }
+        else if (commands[i] == 'L') {
+            removeNode(&root, array[L]);
             L++;
         }
 
-        Node *maxNode = treeMaximum(root);
-        if (maxNode != nil) {
-            printf("%d\n", maxNode->key);
-        } else {
-            printf("0\n"); 
-        }
+        Node *maximum = treeMaximum(root);
+        printf("%d\n", maximum->key);
     }
 
-    fclose(input);
+    free(array);
+    freeTree(root);
+    free(nil);
     return 0;
 }
