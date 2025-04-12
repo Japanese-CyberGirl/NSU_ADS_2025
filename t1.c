@@ -11,16 +11,17 @@ void print_matrix(int **matrix, int N) {
     }
 }
 
-int zero_column(int **matrix, int N) {
+int zero_column(int **matrix, int N, int *massive) {
     int temp = 1;
     for (int j = 0 ; j < N ; j ++ ) {
         for (int i = 0 ; i < N ; i ++ ) {
-            if (matrix[i][j] != 0) temp = 0;
+            if (matrix[i][j] != 0 || massive[j] == 1) {
+                temp = 0;
+                break;
+            }
         }
         if (temp) {
-            for (int a = 0 ; a < N ; a ++ ) {
-                matrix[a][j] = 52;
-            }
+            massive[j] = 1;
             return j;
         }
         temp = 1;
@@ -49,6 +50,8 @@ int main()
         matrix[i] = (int*)calloc(N, sizeof(int));
     }
 
+    int *massive = (int*)calloc(N, sizeof(int*));
+
 
     for (int i = 0 ; i < M ; i ++ ) {
         int inp;
@@ -62,7 +65,7 @@ int main()
     for (int i = 0 ; i < N ; i ++ ) {
         //print_matrix(matrix, N);
         //printf("\n");
-        int x = zero_column(matrix, N);
+        int x = zero_column(matrix, N, massive);
         if (x == -1) {
             printf("bad course\n");
             return 0;
