@@ -65,50 +65,27 @@ int main()
         printf("%d\t", massive[i]);
     }
 
-    printf("\n");
-
-    printf("%d\n", zero_column(massive, N));
-
-    decrement(matrix, massive, N, zero_column(massive, N));
-
-    printf("\n");
-
-    print_matrix(matrix, N);
-
-    printf("\n");
-
-    for (int i = 0 ; i < N ; i ++ ) {
-        printf("%d\t", massive[i]);
-    }
-
-
-    //matrix[i][j] - i строка j столбец
-
     int *topological_array = (int*)calloc(N, sizeof(int));
 
     int counter = 0 ;
     int i = 0 ;
 
+    for (int i = 0 ; i < N ; i ++ ) {
+        int temp = zero_column(massive, N);
+        if (temp == -1) {
+            printf("bad course\n");
+            return 0;
+        }
+        topological_array[i] = temp + 1;
+        decrement(matrix, massive, N, temp);
+    }
 
-    
+    printf("\n");
 
-    // for (int i = 0 ; i < N ; i ++ ) {
+    for (int i = 0 ; i < N ; i ++ ) {
+        printf("%d\t", topological_array[i]);
+    }
 
-    //     int x = zero_column(matrix, N, massive);
-    //     if (x == -1) {
-    //         printf("bad course\n");
-    //         return 0;
-    //     }
-    //     //printf("%d\n\n", x);
-    //     topological_array[i] = x+1;
-    //     row_to_zero(matrix, N, x);
-    // }
-
-    ////print_matrix(matrix, N);
-    //printf("\n");
-    // for (int i = 0 ; i < N ; i ++ ) {
-    //     printf("%d\t", topological_array[i]);
-    // }
 
     fclose(input);
     return 0;
