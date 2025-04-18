@@ -59,24 +59,21 @@ int main()
         fscanf(input, "%d %d", &inp, &out);
         matrix[inp-1][out-1] = 1;
     }
-    //matrix[i][j] - i строка j столбец
+
     int *topological_array = (int*)calloc(N, sizeof(int));
 
     for (int i = 0 ; i < N ; i ++ ) {
-        //print_matrix(matrix, N);
-        //printf("\n");
+
         int x = zero_column(matrix, N, massive);
         if (x == -1) {
             printf("bad course\n");
             return 0;
         }
-        //printf("%d\n\n", x);
+
         topological_array[i] = x+1;
         row_to_zero(matrix, N, x);
     }
 
-    ////print_matrix(matrix, N);
-    //printf("\n");
     for (int i = 0 ; i < N ; i ++ ) {
         printf("%d\t", topological_array[i]);
     }
