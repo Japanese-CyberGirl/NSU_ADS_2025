@@ -2,22 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void search(int v , bool *visited , int **matrix, int vertex_counter) {
-    visited[v] = true;
-    printf("%d \n", v);
 
-    for (int i = 0 ; i < vertex_counter ; i ++ ) {
-        if (matrix[v][i] && !visited[i]) {
-            search(i , visited , matrix, vertex_counter);
-        }
-    }
-}
-
-void DFS(int **matrix , int vertex_counter , int start_vertex) {
-    bool *visited = (bool*)calloc(vertex_counter, sizeof(bool));
-
-    search(start_vertex, visited, matrix, vertex_counter);
-}
 
 int main()
 {
@@ -29,7 +14,38 @@ int main()
     fscanf(input, "%d %d", &N, &M);
     printf("%d %d\n", N, M);
 
-    
+    int **matrix = (int**)calloc(N, sizeof(int*));
+    for (int i = 0 ; i < N ; i ++ )  {
+        matrix[i] = (int*)calloc(N, sizeof(int));
+    }
+
+    for (int i = 0 ; i < N ; i ++ ) {
+        for (int j = 0 ; j < N ; j ++ ) {
+            printf("%d\t", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    for (int i = 0 ; i < M ; i ++ ) {
+        int x_cor = 0;
+        int y_cor = 0;
+        fscanf(input, "%d %d", &x_cor, &y_cor);
+        matrix[x_cor - 1][y_cor - 1] = 1;
+        matrix[y_cor - 1][x_cor - 1] = 1;
+    }
+
+    printf("\n");
+
+    for (int i = 0 ; i < N ; i ++ ) {
+        for (int j = 0 ; j < N ; j ++ ) {
+            printf("%d\t", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    printf("\n");
+
+
 
     fclose(input);
     return 0;
