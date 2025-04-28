@@ -1,81 +1,85 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
-// Функция для поиска топологического порядка через DFS
-bool dfs(int v, int **matrix, int *visited, int N, int *sort, int *index) {
-    visited[v] = 1;  // Вершина помечена как "в процессе обработки"
+#define max_n 100000
 
-    // Пройдем по всем соседям вершины v
-    for (int i = 0; i < N; i++) {
-        if (matrix[v][i] == 1) {  // Если существует ребро от v к i
-            if (visited[i] == 1) {  // Если вершина уже в процессе обработки, то найден цикл
-                return false;
-            }
-            if (visited[i] == 0) {  // Если вершина еще не посещена
-                if (!dfs(i, matrix, visited, N, sort, index)) {
-                    return false;
-                }
-            }
-        }
+typedef struct Node {
+    int vertex;
+    struct Node *next;
+} Node;
+
+Node *adj_list[max_n + 1]; // список смежности
+int in_degree[max_n + 1];  // входные степени вершин
+int res_ord[max_n];        // топологический порядок
+int res_size = 0;          // размер топологического порядка
+
+// добавление ребра в список смежности
+void add_edge(Node **adj, int from, int to) {
+    Node *new_n = (Node *)malloc(sizeof(Node));
+    new_n->vertex = to;
+    new_n->next = adj[from];
+    adj[from] = new_n;
+}
+
+// алгоритм Кана
+int k_alg(int N) {
+    int queue[max_n]; // очередь для вершин с нулевой входной степенью
+    int front = 0;
+    int rear = 0; // указатели для очереди
+
+    // добавляем вершины с нулевой входной степенью в очередь
+    for (int i = 1; i <= N; i++) {
+        if (in_degree[i] == 0)
+            queue[rear++] = i;
     }
 
-    visited[v] = 2;  // Вершина обработана
-    sort[(*index)++] = v;  // Добавляем вершину в топологический порядок
-    return true;
+    // пока очередь не пуста
+    while (front < rear) {
+        int u = queue[front++]; // извлекаем вершину
+        res_ord[res_size++] = u; // добавляем в результат
+
+        Node *current = adj_list[u];
+        while (current != NULL) {
+            int v = current->vertex;
+            in_degree[v]--;  // уменьшаем входную степень вершины v
+            if (in_degree[v] == 0) // если входная степень стала нулевой, добавляем в очередь
+                queue[rear++] = v;
+            current = current->next;
+        }
+    }
+    return res_size == N; // если обработаны все вершины, то возвращаем TRUE
 }
 
 int main() {
-    freopen("input.txt", "r", stdin);
+    int N, M;
+    scanf("%d %d", &N, &M);
 
-    int N = 0;  // Количество переменных
-    int M = 0;  // Количество неравенств
-    fscanf(stdin, "%d %d", &N, &M);
-
-    // Создаем матрицу смежности для графа
-    int **matrix = (int**)calloc(N, sizeof(int*));
-    for (int i = 0; i < N; i++) {
-        matrix[i] = (int*)calloc(N, sizeof(int));
+    // Инициализация списка смежности и степеней входа
+    for (int i = 1; i <= N; i++) {
+        adj_list[i] = NULL;
+        in_degree[i] = 0;
     }
 
-    // Заполняем матрицу смежности на основе неравенств
+    // Чтение ребер и добавление их в граф
     for (int i = 0; i < M; i++) {
-        int x = 0, y = 0;
-        fscanf(stdin, "%d %d", &x, &y);
-        matrix[x - 1][y - 1] = 1;  // x-1, y-1, т.к. индексация с 0
+        int from, to;
+        scanf("%d %d", &from, &to);
+        add_edge(adj_list, from, to);
+        in_degree[to]++;
     }
 
-    // Массив для отслеживания состояния вершин
-    int *visited = (int*)calloc(N, sizeof(int));  // 0 - не посещена, 1 - в процессе, 2 - посещена
-    int *sort = (int*)calloc(N, sizeof(int));  // Массив для хранения топологического порядка
-    int index = 0;
-
-    // Выполняем DFS для всех вершин
-    for (int i = 0; i < N; i++) {
-        if (visited[i] == 0) {  // Если вершина еще не посещена
-            if (!dfs(i, matrix, visited, N, sort, &index)) {
-                printf("NO\n");
-                return 0;  // Если цикл обнаружен
-            }
-        }
+    // Выполнение алгоритма Кана
+    if (!k_alg(N)) {
+        printf("NO\n");
+        return 0;
     }
 
-    // Если цикл не найден, выводим результат
+    // Вывод результата
     printf("YES\n");
-
-    // Выводим топологический порядок
-    for (int i = N - 1; i >= 0; i--) {  // Мы строили порядок в обратном порядке
-        printf("%d ", sort[i] + 1);  // Индексация с 1, поэтому +1
+    for (int i = 0; i < N; i++) {
+        printf("%d ", res_ord[i]);
     }
     printf("\n");
-
-    // Освобождаем память
-    free(visited);
-    free(sort);
-    for (int i = 0; i < N; i++) {
-        free(matrix[i]);
-    }
-    free(matrix);
 
     return 0;
 }
