@@ -1,85 +1,90 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define max_n 100000
+typedef struct Edge {
+    int dest;
+    struct Edge* next;
+} Edge;
 
-typedef struct Node {
-    int vertex;
-    struct Node *next;
-} Node;
+Edge* graph[100001];
+int inDegree[100001];
+int topo_order[100001];
+int order_size = 0;
 
-Node *adj_list[max_n + 1]; // список смежности
-int in_degree[max_n + 1];  // входные степени вершин
-int res_ord[max_n];        // топологический порядок
-int res_size = 0;          // размер топологического порядка
-
-// добавление ребра в список смежности
-void add_edge(Node **adj, int from, int to) {
-    Node *new_n = (Node *)malloc(sizeof(Node));
-    new_n->vertex = to;
-    new_n->next = adj[from];
-    adj[from] = new_n;
+void linkNodes(int src, int dest) {
+    Edge* newEdge = (Edge*)malloc(sizeof(Edge));
+    newEdge->dest = dest;
+    newEdge->next = graph[src];
+    graph[src] = newEdge;
 }
 
-// алгоритм Кана
-int k_alg(int N) {
-    int queue[max_n]; // очередь для вершин с нулевой входной степенью
-    int front = 0;
-    int rear = 0; // указатели для очереди
+int topologicalSort(int n) {
+    int queue[100001];
+    int front = 0, rear = 0;
 
-    // добавляем вершины с нулевой входной степенью в очередь
-    for (int i = 1; i <= N; i++) {
-        if (in_degree[i] == 0)
+    for (int i = 1; i <= n; ++i) {
+        if (inDegree[i] == 0) {
             queue[rear++] = i;
-    }
-
-    // пока очередь не пуста
-    while (front < rear) {
-        int u = queue[front++]; // извлекаем вершину
-        res_ord[res_size++] = u; // добавляем в результат
-
-        Node *current = adj_list[u];
-        while (current != NULL) {
-            int v = current->vertex;
-            in_degree[v]--;  // уменьшаем входную степень вершины v
-            if (in_degree[v] == 0) // если входная степень стала нулевой, добавляем в очередь
-                queue[rear++] = v;
-            current = current->next;
         }
     }
-    return res_size == N; // если обработаны все вершины, то возвращаем TRUE
+
+    while (front < rear) {
+        int current = queue[front++];
+        topo_order[order_size++] = current;
+
+        Edge* edge = graph[current];
+        while (edge != NULL) {
+            int neighbor = edge->dest;
+            if (--inDegree[neighbor] == 0) {
+                queue[rear++] = neighbor;
+            }
+            edge = edge->next;
+        }
+    }
+
+    return order_size == n;
 }
 
 int main() {
-    int N, M;
-    scanf("%d %d", &N, &M);
+    int n, m;
+    FILE *input = fopen("input.txt", "r");
+    fscanf(input, "%d %d", &n, &m);
 
-    // Инициализация списка смежности и степеней входа
-    for (int i = 1; i <= N; i++) {
-        adj_list[i] = NULL;
-        in_degree[i] = 0;
+    for (int i = 1; i <= n; ++i) {
+        graph[i] = NULL;
+        inDegree[i] = 0;
     }
 
-    // Чтение ребер и добавление их в граф
-    for (int i = 0; i < M; i++) {
-        int from, to;
-        scanf("%d %d", &from, &to);
-        add_edge(adj_list, from, to);
-        in_degree[to]++;
+    for (int i = 0; i < m; ++i) {
+        int a, b;
+        fscanf(input, "%d %d", &a, &b);
+        linkNodes(a, b);
+        inDegree[b]++;
     }
 
-    // Выполнение алгоритма Кана
-    if (!k_alg(N)) {
+    if (!topologicalSort(n)) {
         printf("NO\n");
         return 0;
     }
 
-    // Вывод результата
+    int node_values[100001];
+    for (int i = 0; i < order_size; ++i) {
+        node_values[topo_order[i]] = i + 1;
+    }
+
     printf("YES\n");
-    for (int i = 0; i < N; i++) {
-        printf("%d ", res_ord[i]);
+    for (int i = 1; i <= n; ++i) {
+        printf("%d ", node_values[i]);
     }
     printf("\n");
+
+    for (int i = 1; i <= n; ++i) {
+        Edge* edge = graph[i];
+        while (edge != NULL) {
+            Edge* temp = edge;
+            edge = edge->next;
+        }
+    }
 
     return 0;
 }
