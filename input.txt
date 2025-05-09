@@ -1,6 +1,16 @@
-6 5
-1 2
-2 3
-3 1
-6 5
-5 4
+4
+Ivanov 3
+Petrov
+Sidorov
+Pentyushkin
+Petrov 2
+Sidorov
+Ivanov
+Sidorov 3
+Pentyushkin
+Ivanov
+Petrov
+Pentyushkin 3
+Ivanov
+Kuznetsov
+Sidorov
