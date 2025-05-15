@@ -1,45 +1,171 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
 
-void print_matrix(int **matrix, int N) {
-    for (int i = 0 ; i < N ; i ++ ) {
-        for (int j = 0 ; j < N ; j ++ ) {
-            printf("%d", matrix[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
+#define MAX 301
+#define HASH 9973
+
+typedef struct {
+    char name[17];
+    int friends[MAX]; 
+    int cnt;
+    int degree;
+} Person;
+
+typedef struct HashNode {
+    char key[17];
+    int id;
+    struct HashNode* next;
+} HashNode;
+
+Person people[MAX];
+HashNode* hash_table[HASH] = {0};
+int N, path[MAX];
+bool visited[MAX];
+bool found = false;
+
+
+static inline unsigned hash(const char* s) {
+    unsigned h = 0;
+    while (*s) h = (h << 5) + tolower(*s++);
+    return h % HASH;
 }
-int main() {
-    freopen("input.txt", "r", stdin);
-    int N = 0;
-    fscanf(stdin, "%d", &N);
 
-    int **matrix = (int**)calloc(N, sizeof(int*));
-    for (int i = 0 ; i < N ; i ++ ) {
-        matrix[i] = (int*)calloc(N, sizeof(int));
+
+void add_hash(const char* name, int id) {
+    char lower[17];
+    strcpy(lower, name);
+    for (char* p = lower; *p; ++p) *p = tolower(*p);
+    
+    unsigned h = hash(lower);
+    HashNode* node = malloc(sizeof(HashNode));
+    strcpy(node->key, lower);
+    node->id = id;
+    node->next = hash_table[h];
+    hash_table[h] = node;
+}
+
+
+static inline int find_hash(const char* name) {
+    char lower[17];
+    strcpy(lower, name);
+    for (char* p = lower; *p; ++p) *p = tolower(*p);
+    
+    unsigned h = hash(lower);
+    for (HashNode* node = hash_table[h]; node; node = node->next) {
+        if (strcmp(node->key, lower) == 0) return node->id;
     }
+    return -1;
+}
 
-    for (int i = 0 ; i < N ; i ++ ) {
-        int j = 0;
-        while (j < N) {
-            char ch;
-            fscanf(stdin, "%c", &ch);
-            matrix[i][j] = (ch == '0' || ch == '1') ? ((i == j) ? 1 : (ch - '0')) : matrix[i][j];
-            j = (ch == '0' || ch == '1') ? j + 1 : j;
-        }
-    }
 
-    for (int k = 0 ; k < N ; k ++ ) {
-        for (int i = 0 ; i < N ; i ++ ) {
-            for (int j = 0 ; j < N ; j ++ ) {
-                if (matrix[i][k] && matrix[k][j]) {
-                    matrix[i][j] = 1;
-                }
+int compare(const void* a, const void* b) {
+    const int x = *(const int*)a;
+    const int y = *(const int*)b;
+    if (people[y].degree != people[x].degree)
+        return people[y].degree - people[x].degree;
+    return strcmp(people[x].name, people[y].name);
+}
+
+
+int DFS(int step, int start) {
+    if (found) return 1;
+    
+    if (step == N) {
+      
+        for (int i = 0; i < people[path[N-1]].cnt; ++i) {
+            if (people[path[N-1]].friends[i] == start) {
+                found = true;
+                return 1;
             }
         }
+        return 0;
     }
 
-    print_matrix(matrix, N);
+    int current = path[step-1];
+
+    for (int i = 0; i < people[current].cnt; ++i) {
+        int next = people[current].friends[i];
+        if (!visited[next]) {
+            visited[next] = true;
+            path[step] = next;
+            if (DFS(step+1, start)) return 1;
+            visited[next] = false;
+        }
+    }
+    return 0;
+}
+
+int main() {
+    FILE* input = fopen("input.txt", "r");
+    fscanf(input, "%d", &N);
+
+
+    for (int i = 0; i < N; ++i) {
+        char name[17];
+        int k;
+        fscanf(input, "%16s%d", name, &k);
+        strcpy(people[i].name, name);
+        add_hash(name, i);
+        people[i].degree = 0;
+        for (int j = 0; j < k; ++j) fscanf(input, "%*s");
+    }
+
+
+    rewind(input);
+    fscanf(input, "%*d");
+    for (int i = 0; i < N; ++i) {
+        char name[17];
+        int k;
+        fscanf(input, "%16s%d", name, &k);
+        people[i].cnt = 0;
+
+        for (int j = 0; j < k; ++j) {
+            char friend[17];
+            fscanf(input, "%16s", friend);
+            int id = find_hash(friend);
+            if (id >= 0) {
+                people[i].friends[people[i].cnt++] = id;
+                people[id].degree++;
+            }
+        }
+        qsort(people[i].friends, people[i].cnt, sizeof(int), compare);
+    }
+    fclose(input);
+
+    
+    int start = 0;
+    for (int i = 1; i < N; ++i) {
+        if (people[i].degree > people[start].degree ||
+           (people[i].degree == people[start].degree && 
+            strcmp(people[i].name, people[start].name) < 0)) {
+            start = i;
+        }
+    }
+
+    memset(visited, 0, sizeof(visited));
+    path[0] = start;
+    visited[start] = true;
+
+    DFS(1, start);
+
+    if (found) {
+        for (int i = 0; i < N; ++i) {
+            printf("%s\n", people[path[i]].name);
+        }
+    }
+
+
+    for (int i = 0; i < HASH; ++i) {
+        HashNode* node = hash_table[i];
+        while (node) {
+            HashNode* temp = node;
+            node = node->next;
+            free(temp);
+        }
+    }
+
     return 0;
 }
