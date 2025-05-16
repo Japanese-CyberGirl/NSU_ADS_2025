@@ -14,6 +14,39 @@ typedef struct {
     int vertex;
 } HeapItem;
 
+#define swap(a, b) { HeapItem temp = a; a = b; b = temp; }
+
+void push(HeapItem *heap, int *heap_size, HeapItem item) {
+    int i = (*heap_size)++;
+    heap[i] = item;
+    while (i > 0) {
+        int p = (i - 1) / 2;
+        if (heap[p].dist <= heap[i].dist) break;
+        swap(heap[p], heap[i]);
+        i = p;
+    }
+}
+
+HeapItem pop(HeapItem *heap, int *heap_size) {
+    HeapItem min_item = heap[0];
+    heap[0] = heap[--(*heap_size)];
+    int i = 0;
+    while (1) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int smallest = i;
+        if (left < *heap_size && heap[left].dist < heap[smallest].dist)
+            smallest = left;
+        if (right < *heap_size && heap[right].dist < heap[smallest].dist)
+            smallest = right;
+        if (smallest != i) {
+            swap(heap[i], heap[smallest]);
+            i = smallest;
+        } else break;
+    }
+    return min_item;
+}
+
 void dijkstra(int start, int N, long long *dist, int *prev) {
     const long long INF = 1e18;
     for (int i = 1; i <= N; i++) {
@@ -22,46 +55,13 @@ void dijkstra(int start, int N, long long *dist, int *prev) {
     }
     dist[start] = 0;
 
-    HeapItem *heap = malloc(3000000 * sizeof(HeapItem));
+    HeapItem *heap = calloc(3000000, sizeof(HeapItem));
     int heap_size = 0;
 
-    #define swap(a, b) { HeapItem temp = a; a = b; b = temp; }
-
-    void push(HeapItem item) {
-        int i = heap_size++;
-        heap[i] = item;
-        while (i > 0) {
-            int p = (i - 1) / 2;
-            if (heap[p].dist <= heap[i].dist) break;
-            swap(heap[p], heap[i]);
-            i = p;
-        }
-    }
-
-    HeapItem pop() {
-        HeapItem min_item = heap[0];
-        heap[0] = heap[--heap_size];
-        int i = 0;
-        while (1) {
-            int left = 2*i + 1;
-            int right = 2*i + 2;
-            int smallest = i;
-            if (left < heap_size && heap[left].dist < heap[smallest].dist)
-                smallest = left;
-            if (right < heap_size && heap[right].dist < heap[smallest].dist)
-                smallest = right;
-            if (smallest != i) {
-                swap(heap[i], heap[smallest]);
-                i = smallest;
-            } else break;
-        }
-        return min_item;
-    }
-
-    push((HeapItem){0, start});
+    push(heap, &heap_size, (HeapItem){0, start});
 
     while (heap_size > 0) {
-        HeapItem min_item = pop();
+        HeapItem min_item = pop(heap, &heap_size);
         int u = min_item.vertex;
         long long current_dist = min_item.dist;
 
@@ -74,7 +74,7 @@ void dijkstra(int start, int N, long long *dist, int *prev) {
             if (dist[v] > dist[u] + w) {
                 dist[v] = dist[u] + w;
                 prev[v] = u;
-                push((HeapItem){dist[v], v});
+                push(heap, &heap_size, (HeapItem){dist[v], v});
             }
         }
     }
@@ -97,13 +97,13 @@ int main() {
     for (int i = 0; i < M; i++) {
         int A, B, W;
         fscanf(input, "%d %d %d", &A, &B, &W);
-        Edge *e1 = (Edge*)malloc(sizeof(Edge));
+        Edge *e1 = (Edge*)calloc(1,sizeof(Edge));
         e1->to = B;
         e1->weight = W;
         e1->next = adj[A];
         adj[A] = e1;
 
-        Edge *e2 = (Edge*)malloc(sizeof(Edge));
+        Edge *e2 = (Edge*)calloc(1,sizeof(Edge));
         e2->to = A;
         e2->weight = W;
         e2->next = adj[B];
@@ -115,8 +115,8 @@ int main() {
         int S = queries[q][0];
         int T = queries[q][1];
 
-        long long *dist = (long long*)malloc((N + 1) * sizeof(long long));
-        int *prev = (int*)malloc((N + 1) * sizeof(int));
+        long long *dist = (long long*)calloc((N + 1), sizeof(long long));
+        int *prev = (int*)calloc((N + 1), sizeof(int));
         dijkstra(S, N, dist, prev);
 
         if (dist[T] >= 1e18) {
@@ -148,15 +148,12 @@ int main() {
             }
         }
 
-        free(dist);
-        free(prev);
     }
 
     for (int i = 1; i <= N; i++) {
         Edge *e = adj[i];
         while (e != NULL) {
             Edge *next = e->next;
-            free(e);
             e = next;
         }
     }
